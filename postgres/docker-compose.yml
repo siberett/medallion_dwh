@@ -1,0 +1,39 @@
+services:
+  postgres_dw:
+    image: postgres:14
+    container_name: postgres_datawarehouse
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - dw_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dw_network
+
+  pgadmin_dw:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_datawarehouse
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres_dw
+    volumes:
+      - dw_pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin_servers.json:/pgadmin4/servers.json
+    networks:
+      - dw_network
+
+volumes:
+  dw_postgres_data:
+  dw_pgadmin_data:
+
+networks:
+  dw_network:
+    driver: bridge
