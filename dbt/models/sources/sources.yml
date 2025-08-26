@@ -1,0 +1,156 @@
+version: 2  # DBT version of the schema file
+
+sources:
+  # Bronze layer for CRM data
+  - name: bronze_crm  # Logical name of the source
+    schema: bronze    # PostgreSQL schema where the tables live
+    database: "{{ env_var('POSTGRES_DB', 'warehouse') }}"  # Optional: reference the env variable
+    description: "Bronze layer tables containing raw CRM system data ingested daily" 
+    tags: ["bronze", "raw_data"]
+
+    tables:
+      - name: crm_cust_info
+        description: "Customer information from CRM system - contains personal and demographic data"
+        # Optional metadata: can include path to CSV for reference only
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_crm/cust_info.csv"
+          source_system: "Salesforce CRM"
+          update_frequency: "daily_full_refresh"
+
+        # Table-specific tags
+        tags: ["pii", "customers", "daily_load"]
+
+        columns:
+          - name: cst_id
+            description: "Unique customer identifier (Primary Key)"
+            data_type: integer
+            meta:
+              primary_key: true
+              business_name: "Customer ID"
+            tests:
+              - unique
+              - not_null
+
+          - name: cst_key
+            description: "Customer business key from source system"
+            data_type: varchar
+            meta:
+              business_name: "Customer Key"
+            tests:
+              - unique
+              - not_null
+
+          - name: cst_firstname
+            description: "Customer first name"
+            data_type: varchar
+            meta:
+              business_name: "First Name"
+              pii: true
+              anonymizable: true
+            tests:
+              - not_null
+              - dbt_utils.not_empty_string
+
+          - name: cst_lastname
+            description: "Customer last name"
+            data_type: varchar
+            meta:
+              business_name: "Last Name"
+              pii: true
+              anonymizable: true
+            tests:
+              - not_null
+              - dbt_utils.not_empty_string
+
+          - name: cst_material_status
+            description: "Customer marital status (Single, Married, Divorced, etc.)"
+            data_type: varchar
+            meta:
+              business_name: "Marital Status"
+              valid_values: ["S", "M", NULL]
+            tests:
+              - accepted_values:
+                  values: ["S", "M", NULL]
+
+          - name: cst_gndr
+            description: "Customer gender (M/F/O/Unknown)"
+            data_type: varchar
+            meta:
+              business_name: "Gender"
+              valid_values: ["M", "F", NULL]
+            tests:
+              - accepted_values:
+                  values: ["M", "F", NULL]
+
+          - name: cst_create_date
+            description: "Date when customer record was created in source system"
+            data_type: date
+            meta:
+              business_name: "Customer Creation Date"
+              timezone: "UTC"
+            tests:
+              - not_null
+              - dbt_utils.expression_is_true:
+                  expression: ">= '2020-01-01'"
+     
+
+
+      - name: crm_prd_info
+        description: "Current and History Product Information"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_crm/prd_info.csv"
+        columns:
+          - name: prd_id
+          - name: prd_key
+          - name: prd_nm
+          - name: prd_cost
+          - name: prd_line
+          - name: prd_start_dt
+          - name: prd_end_dt
+
+      - name: crm_sales_details
+        description: "Transactional Records about Sales and Orders"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_crm/sales_details.csv"
+        columns:
+          - name: sls_ord_num
+          - name: sls_prd_key
+          - name: sls_cust_id
+          - name: sls_order_dt
+          - name: sls_ship_dt
+          - name: sls_due_dt
+          - name: sls_sales
+          - name: sls_quantity
+          - name: sls_price
+
+  # Bronze layer for ERP data
+  - name: bronze_erp
+    schema: bronze
+    database: "{{ env_var('POSTGRES_DB', 'warehouse') }}"
+    tables:
+      - name: erp_cust_az12
+        description: "Extras customer information (Birhdate)"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_erp/CUST_AZ12.csv"
+        columns:
+          - name: cid
+          - name: bdate
+          - name: gen
+
+      - name: erp_loc_a101
+        description: "ERP location data"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_erp/LOC_A101.csv"
+        columns:
+          - name: cid
+          - name: cntry
+
+      - name: erp_px_cat_g1v2
+        description: "ERP product category data"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_erp/PX_CAT_G1V2.csv"
+        columns:
+          - name: id
+          - name: cat
+          - name: subcat
+          - name: maintenance
