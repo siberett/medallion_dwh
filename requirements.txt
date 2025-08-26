@@ -3,3 +3,8 @@
 # DBT dependencies
 dbt-postgres
 astronomer-cosmos
+pandas
+sqlalchemy
+psycopg2-binary
+boto3
+s3fs

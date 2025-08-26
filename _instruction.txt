@@ -1,0 +1,127 @@
+--- kill postgres si esta instalado o utilizando el puerto
+    sudo lsof -i :5432
+    sudo kill -9 <PID>
+
+
+--- añadir en el docker file si se usa MSSQL
+    USER root
+
+    # Instala dependencias y el driver ODBC de MSSQL
+    RUN apt-get update && \
+        apt-get install -y gnupg curl apt-transport-https && \
+        curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+        curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+        apt-get update && \
+        ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \
+        apt-get clean
+
+    USER astro
+
+--- reventarlo todo
+docker stop $(docker ps -aq)
+docker rmi -f $(docker images -aq)
+docker system prune -a --volumes -f
+docker volume rm $(docker volume ls -q)
+
+
+--- Añadir en el dockerfile de astro para DBT
+
+RUN pip install dbt-postgres astronomer-cosmos
+COPY dbt /usr/local/airflow/dbt/
+
+--- Crear estructura de carpetas de astro
+
+mkdir -p dbt/models/staging
+mkdir -p dbt/models/marts
+mkdir -p dbt/macros
+mkdir -p dbt/tests
+mkdir -p dbt/seeds
+mkdir -p dbt/snapshots
+
+echo dbt/dbt_project.yml
+***************
+name: 'analytics'
+version: '1.0.0'
+config-version: 2
+
+# Carpeta donde están tus modelos SQL
+model-paths: ["models"]
+
+# Carpeta donde se guardarán los archivos compilados
+target-path: "target"
+
+# Esquemas donde se crearán las tablas
+models:
+  analytics:
+    +materialized: table
+***************    
+
+echo dbt/profiles.yml
+***************    
+analytics:
+  outputs:
+    dev:
+      type: postgres
+      host: postgres_datawarehouse  # Nombre de tu contenedor PostgreSQL
+      user: postgres
+      password: postgres
+      port: 5432
+      dbname: warehouse
+      schema: dbt_analytics
+      threads: 4
+      keepalives_idle: 0
+      search_path: "dbt_analytics,public"
+    
+    prod:
+      type: postgres
+      host: postgres_datawarehouse
+      user: postgres
+      password: postgres
+      port: 5432
+      dbname: warehouse
+      schema: dbt_production
+      threads: 8
+      keepalives_idle: 0
+      search_path: "dbt_production,public"
+  
+  target: dev
+***************    
+--- 
+    astro dev init
+
+--- cd /db
+    docker compose up -d
+
+--- cd ..
+    astro dev start
+
+--- 
+    docker network ls
+    docker network inspect datawarehouse-medallion_11f1d6_airflow
+    docker network connect datawarehouse-medallion_11f1d6_airflow postgres_datawarehouse
+    docker network connect medallion-dwh_78daa9_airflow postgres_datawarehouse
+astro-root_9e2c14_airflow
+--- test dbt
+
+astro dev bash
+cd /usr/local/airflow/dbt
+dbt run
+
+
+
+
+--- create db connection
+    astro dev bash webserver
+    airflow connections add 'postgres_dw' \
+  --conn-uri 'postgresql://postgres:postgres@postgres_datawarehouse:5432/warehouse'
+
+    airflow connections add 'mssql' \
+        --conn-type 'mssql' \
+        --conn-host 'sqlserver' \
+        --conn-login 'SA' \
+        --conn-password 'YourStrong!Passw0rd' \
+        --conn-port 1433 \
+        --conn-schema 'dbo'
+
+--- include path
+    '/usr/local/airflow/include/python'
