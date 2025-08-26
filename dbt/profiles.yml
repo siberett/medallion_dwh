@@ -1,0 +1,27 @@
+medallion_dwh:
+  outputs:
+    dev:
+      type: postgres
+      host: postgres_datawarehouse  # Nombre de tu contenedor PostgreSQL
+      user: postgres
+      password: postgres
+      port: 5432
+      dbname: warehouse
+      schema: dbt_
+      threads: 4
+      keepalives_idle: 0
+      search_path: "dbt_analytics,public"
+    
+    prod:
+      type: postgres
+      host: postgres_datawarehouse
+      user: postgres
+      password: postgres
+      port: 5432
+      dbname: warehouse
+      schema: dbt_production
+      threads: 8
+      keepalives_idle: 0
+      search_path: "dbt_production,public"
+  
+  target: dev
