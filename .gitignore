@@ -50,3 +50,15 @@ out/
 # Configuraciones locales específicas del desarrollador
 config/local.*
 local.config.*
+
+
+.astro/
+logs/
+airflow-webserver.pid
+airflow.cfg
+webserver_config.py
+
+
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
