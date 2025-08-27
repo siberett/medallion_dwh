@@ -1,0 +1,107 @@
+version: 2
+
+sources:
+  - name: bronze_crm
+    schema: bronze
+    database: "{{ env_var('POSTGRES_DB', 'warehouse') }}"
+    description: "Bronze layer tables containing raw CRM system data ingested daily"
+    tags: ["bronze", "raw_data"]
+
+    tables:
+      - name: crm_cust_info
+        description: "Customer information from CRM system - raw data layer"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_crm/cust_info.csv"
+          source_system: "Salesforce CRM"
+          update_frequency: "daily_full_refresh"
+        tags: ["customers", "daily_load"]
+        columns:
+          - name: cst_id
+            description: "Unique customer identifier (Primary Key)"
+            data_type: integer
+          - name: cst_key
+            description: "Customer business key from source system"
+            data_type: varchar
+          - name: cst_firstname
+            description: "Customer first name"
+            data_type: varchar
+          - name: cst_lastname
+            description: "Customer last name"
+            data_type: varchar
+          - name: cst_material_status
+            description: "Customer marital status (Single, Married, Divorced, etc.)"
+            data_type: varchar
+          - name: cst_gnr
+            description: "Customer gender (M/F/Unknown)"
+            data_type: varchar
+          - name: cst_create_date
+            description: "Date customer was created"
+            data_type: date
+        tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              min_value: 1000
+              max_value: 100000
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              column_list: ["cst_id", "cst_key", "cst_firstname", "cst_lastname", "cst_material_status", "cst_gnr", "cst_create_date"]
+
+      - name: crm_prd_info
+        description: "Current and Historical Product Information - raw data layer"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_crm/prd_info.csv"
+          source_system: "Salesforce CRM"
+          update_frequency: "daily_full_refresh"
+        tags: ["products", "daily_load"]
+        columns:
+          - name: prd_id
+            data_type: integer
+          - name: prd_key
+            data_type: varchar
+          - name: prd_nm
+            data_type: varchar
+          - name: prd_cost
+            data_type: numeric
+          - name: prd_line
+            data_type: varchar
+          - name: prd_start_dt
+            data_type: date
+          - name: prd_end_dt
+            data_type: date
+        tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              min_value: 100
+              max_value: 100000
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              column_list: ["prd_id", "prd_key", "prd_nm", "prd_cost", "prd_line", "prd_start_dt", "prd_end_dt"]
+
+      - name: crm_sales_details
+        description: "Transactional records about sales and orders - raw data layer"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_crm/sales_details.csv"
+          source_system: "Salesforce CRM"
+          update_frequency: "daily_full_refresh"
+        tags: ["sales", "orders", "daily_load"]
+        columns:
+          - name: sls_ord_num
+            data_type: integer
+          - name: sls_prd_key
+            data_type: varchar
+          - name: sls_cust_id
+            data_type: integer
+          - name: sls_order_dt
+            data_type: date
+          - name: sls_ship_dt
+            data_type: date
+          - name: sls_due_dt
+            data_type: date
+          - name: sls_sales
+            data_type: numeric
+          - name: sls_quantity
+            data_type: integer
+          - name: sls_price
+            data_type: numeric
+        tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              min_value: 100
+              max_value: 500000
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              column_list: ["sls_ord_num", "sls_prd_key", "sls_cust_id", "sls_order_dt", "sls_ship_dt", "sls_due_dt", "sls_sales", "sls_quantity", "sls_price"]

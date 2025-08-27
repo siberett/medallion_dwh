@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: crm_cust_info
+    description: "Cleaned and transformed customer info from bronze.crm_cust_info"
+    columns:
+      - name: cst_id
+        description: "Primary key of customer"
+        tests:
+          - unique
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: integer
+
+      - name: cst_firstname
+        description: "Customer first name"
+        tests:
+          - not_null
+          - dbt_utils.not_empty_string
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[A-Za-zÀ-ÿ\\s\\-]+$"
+          - dbt_expectations.expect_column_values_to_have_no_leading_or_trailing_whitespace: {}
+
+      - name: cst_lastname
+        description: "Customer last name"
+        tests:
+          - not_null
+          - dbt_utils.not_empty_string
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[A-Za-zÀ-ÿ\\s\\-]+$"
+          - dbt_expectations.expect_column_values_to_have_no_leading_or_trailing_whitespace: {}
+
+      - name: cst_gndr
+        description: "Customer gender (Male/Female/n/a"
+        tests:
+          - accepted_values:
+              values: ["Male", "Female", "n/a"]
+
+      - name: cst_marital_status
+        description: "Customer marital status"
+        tests:
+          - accepted_values:
+              values: ["Single", "Married", "n/a"]
+
+      - name: cst_create_date
+        description: "Record creation date"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "'2025-01-01'"

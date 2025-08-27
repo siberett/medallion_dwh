@@ -20,8 +20,11 @@ models:
     silver:
       +materialized: table
       +strategy: delete+insert
+      +tags: ["silver"]
+      +schema: silver
 
     gold:
       +materialized: view
+      +tags: ["gold"]
 
 
