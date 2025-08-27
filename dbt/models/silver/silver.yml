@@ -118,3 +118,83 @@ models:
           - dbt_expectations.expect_column_values_to_be_of_type:
               arguments:
                 column_type: date
+
+
+  - name: crm_sales_details
+    description: "Silver table with cleaned and transformed sales details"
+    columns:
+      - name: sls_ord_num
+        description: "Order number"
+        tests:
+          - not_null
+          - unique
+
+      - name: sls_prd_key
+        description: "Product key, links to crm_prd_info"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('crm_prd_info')
+              field: prd_key
+
+      - name: sls_cust_id
+        description: "Customer ID, links to crm_cust_info"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('crm_cust_info')
+              field: cst_id
+
+      - name: sls_order_dt
+        description: "Order date (cast from integer to date)"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+
+      - name: sls_ship_dt
+        description: "Shipping date (cast from integer to date)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+
+      - name: sls_due_dt
+        description: "Due date (cast from integer to date)"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+
+      - name: sls_quantity
+        description: "Quantity sold, must be positive"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+
+      - name: sls_price
+        description: "Price per unit, must be positive"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0.01
+
+      - name: sls_sales
+        description: "Total sales amount, must equal quantity * price and be positive"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0.01
+
+      - name: dwh_create_date
+        description: "Date when data was loaded into the Silver layer"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
