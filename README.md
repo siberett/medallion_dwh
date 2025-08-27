@@ -1,0 +1,6 @@
+- astro dev start
+- cd
+- docker compose up -d
+- cd ..
+- docker network
+- run postgres/scripts in pg admin para cargar el ddl de la capa bronze

@@ -125,3 +125,13 @@ dbt run
 
 --- include path
     '/usr/local/airflow/include/python'
+
+
+
+
+----
+primero dbt run y luego tests
+validacion post deploy
+no frena la ingesta, es util para detectar errores, se prefiere tener datos dirty a no tenerlos.
+----
+para la capa bronze se hacen test ligeros y poco restrictivos, enfocados a monitoreo y consistencia minima.

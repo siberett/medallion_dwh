@@ -1,3 +1,37 @@
+"""
+Bronze Layer Data Ingestion DAG
+
+This DAG implements the Bronze layer of a Medallion Architecture (Bronze-Silver-Gold),
+responsible for ingesting raw data from multiple source systems into PostgreSQL tables.
+
+Architecture Overview:
+- Bronze Layer: Raw data ingestion with minimal transformation
+- Source Systems: CRM and ERP systems
+- Target: PostgreSQL database with bronze schema
+- Pattern: Truncate and reload for each table
+
+DAG Configuration:
+- Schedule: Daily execution (@daily)
+- Catchup: Disabled (only runs current/future dates)
+- Execution: All tasks run in parallel (no dependencies)
+
+Source Data:
+1. CRM System:
+   - Customer Information (cust_info.csv)
+   - Product Information (prd_info.csv)
+   - Sales Transaction Details (sales_details.csv)
+
+2. ERP System:
+   - Customer Data AZ12 (CUST_AZ12.csv)
+   - Location Data A101 (LOC_A101.csv)
+   - Product Catalog G1V2 (PX_CAT_G1V2.csv)
+
+Usage:
+- Scheduled execution: Runs daily automatically
+- Monitoring: Check Airflow UI for task status and logs
+"""
+
+
 from airflow.decorators import dag, task
 from datetime import datetime
 
