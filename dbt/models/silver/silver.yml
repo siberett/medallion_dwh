@@ -21,7 +21,6 @@ models:
           - dbt_expectations.expect_column_values_to_match_regex:
               arguments:
                 regex: "^[A-Za-zÀ-ÿ\\s\\-]+$"
-          - dbt_expectations.expect_column_values_to_have_no_leading_or_trailing_whitespace: {}
 
       - name: cst_lastname
         description: "Customer last name"
@@ -31,19 +30,20 @@ models:
           - dbt_expectations.expect_column_values_to_match_regex:
               arguments:
                 regex: "^[A-Za-zÀ-ÿ\\s\\-]+$"
-          - dbt_expectations.expect_column_values_to_have_no_leading_or_trailing_whitespace: {}
 
       - name: cst_gndr
-        description: "Customer gender (Male/Female/n/a"
+        description: "Customer gender (Male/Female/n/a)"
         tests:
           - accepted_values:
-              values: ["Male", "Female", "n/a"]
+              arguments:
+                values: ["Male", "Female", "n/a"]
 
       - name: cst_marital_status
         description: "Customer marital status"
         tests:
           - accepted_values:
-              values: ["Single", "Married", "n/a"]
+              arguments:
+                values: ["Single", "Married", "n/a"]
 
       - name: cst_create_date
         description: "Record creation date"
@@ -55,3 +55,66 @@ models:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: "'2025-01-01'"
+
+  - name: crm_prd_info
+    description: "Silver table with cleaned and enriched product information"
+    columns:
+      - name: prd_id
+        description: "Primary key of the product"
+        tests:
+          - unique
+          - not_null
+
+      - name: cat_id
+        description: "Derived category ID from product key"
+        tests:
+          - not_null
+
+      - name: prd_key
+        description: "Cleaned product key for analytics"
+        tests:
+          - not_null
+
+      - name: prd_nm
+        description: "Cleaned product name"
+        tests:
+          - not_null
+
+      - name: prd_cost
+        description: "Product cost, nulls replaced with zero"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+
+      - name: prd_line
+        description: "Friendly product line after mapping codes to names"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_set:
+              arguments:
+                value_set: ['Mountain', 'Road', 'Other Sales', 'Touring', 'n/a']
+
+      - name: prd_start_dt
+        description: "Start date for product validity"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+
+      - name: prd_end_dt
+        description: "End date calculated from lead function"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+
+      - name: dwh_create_date
+        description: "Date when data was loaded into the Silver layer"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date

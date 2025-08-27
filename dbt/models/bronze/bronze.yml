@@ -1,6 +1,7 @@
 version: 2
 
 sources:
+  # Bronze layer for CRM data
   - name: bronze_crm
     schema: bronze
     database: "{{ env_var('POSTGRES_DB', 'warehouse') }}"
@@ -105,3 +106,77 @@ sources:
               max_value: 500000
           - dbt_expectations.expect_table_columns_to_match_ordered_list:
               column_list: ["sls_ord_num", "sls_prd_key", "sls_cust_id", "sls_order_dt", "sls_ship_dt", "sls_due_dt", "sls_sales", "sls_quantity", "sls_price"]
+
+  # Bronze layer for ERP data
+  - name: bronze_erp
+    schema: bronze
+    database: "{{ env_var('POSTGRES_DB', 'warehouse') }}"
+    description: "Bronze layer tables containing raw ERP system data ingested daily"
+    tags: ["bronze", "raw_data", "erp"]
+
+    tables:
+      - name: erp_cust_az12
+        description: "Extra customer information (Birthdate) - raw data layer"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_erp/CUST_AZ12.csv"
+          source_system: "ERP"
+          update_frequency: "daily_full_refresh"
+        tags: ["customers", "daily_load"]
+
+        columns:
+          - name: cid
+          - name: bdate
+          - name: gen
+
+        tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 100
+                max_value: 100000
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              arguments:
+                column_list: ["cid", "bdate", "gen"]
+
+      - name: erp_loc_a101
+        description: "ERP location data - raw data layer"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_erp/LOC_A101.csv"
+          source_system: "ERP"
+          update_frequency: "daily_full_refresh"
+        tags: ["locations", "daily_load"]
+
+        columns:
+          - name: cid
+          - name: cntry
+
+        tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 100
+                max_value: 100000
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              arguments:
+                column_list: ["cid", "cntry"]
+
+      - name: erp_px_cat_g1v2
+        description: "ERP product category data - raw data layer"
+        meta:
+          csv_path: "/usr/local/airflow/include/datasets/source_erp/PX_CAT_G1V2.csv"
+          source_system: "ERP"
+          update_frequency: "daily_full_refresh"
+        tags: ["products", "categories", "daily_load"]
+
+        columns:
+          - name: id
+          - name: cat
+          - name: subcat
+          - name: maintenance
+
+        tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 30
+                max_value: 50000
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              arguments:
+                column_list: ["id", "cat", "subcat", "maintenance"]
