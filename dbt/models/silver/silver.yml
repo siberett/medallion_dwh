@@ -198,3 +198,80 @@ models:
           - dbt_expectations.expect_column_values_to_be_of_type:
               arguments:
                 column_type: date
+
+
+
+
+
+
+
+  - name: erp_cust_az12
+    description: "Cleaned customer table in the Silver layer"
+    columns:
+      - name: cid
+        description: "Unique customer identifier"
+        tests:
+          - not_null
+          - unique
+
+      - name: bdate
+        description: "Cleaned customer birthdate"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: '1900-01-01'
+              max_value: current_date
+
+      - name: gen
+        description: "Standardized gender"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Male', 'Female', 'n/a']
+
+  - name: erp_loc_a101
+    description: "Cleaned customer location table in the Silver layer"
+    columns:
+      - name: cid
+        description: "Customer identifier referencing erp_cust_az12"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('silver_erp_customer')
+              field: sid
+
+      - name: cntry
+        description: "Normalized country name"
+        tests:
+          - not_null
+
+  - name: erp_px_cat_g1v2
+    description: "Cleaned product categories in the Silver layer"
+    columns:
+      - name: id
+        description: "Unique category identifier"
+        tests:
+          - not_null
+          - unique
+
+      - name: cat
+        description: "Main product category"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Accessories', 'Bikes', 'Clothing', 'Components']
+
+      - name: subcat
+        description: "Product subcategory"
+        tests:
+          - not_null
+
+      - name: maintenance
+        description: "Maintenance flag"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Yes', 'No']
+
+
+
