@@ -26,5 +26,6 @@ models:
     gold:
       +materialized: view
       +tags: ["gold"]
+      +schema: gold
 
 
