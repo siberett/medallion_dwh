@@ -238,7 +238,7 @@ models:
           - not_null
           - relationships:
               to: ref('crm_cust_info')
-              field: sid
+              field: cst_id
 
       - name: cntry
         description: "Normalized country name"
