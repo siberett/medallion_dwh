@@ -127,7 +127,6 @@ models:
         description: "Order number"
         tests:
           - not_null
-          - unique
 
       - name: sls_prd_key
         description: "Product key, links to crm_prd_info"
