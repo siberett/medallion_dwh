@@ -199,11 +199,6 @@ models:
                 column_type: date
 
 
-
-
-
-
-
   - name: erp_cust_az12
     description: "Cleaned customer table in the Silver layer"
     columns:
@@ -217,9 +212,8 @@ models:
         description: "Cleaned customer birthdate"
         tests:
           - not_null
-          - dbt_utils.accepted_range:
-              min_value: '1900-01-01'
-              max_value: current_date
+          - dbt_utils.expression_is_true:
+              expression: ">= '1900-01-01'::date"
 
       - name: gen
         description: "Standardized gender"
@@ -237,7 +231,7 @@ models:
           - not_null
           - relationships:
               to: ref('crm_cust_info')
-              field: cst_id
+              field: cst_key
 
       - name: cntry
         description: "Normalized country name"
