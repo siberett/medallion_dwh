@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Consolidated customer information from CRM and ERP systems. Provides a single record per customer with key demographic and registration details"
+    columns:
+      - name: customer_id
+        description: "Unique identifier of the customer (from CRM)"
+        tests:
+          - unique
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: integer
+
+      - name: customer_number
+        description: "Business/customer reference number."
+        tests:
+          - unique
+          - not_null
+
+      - name: first_name
+        description: "Customer first name"
+        tests:
+          - not_null
+          - dbt_utils.not_empty_string
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[A-Za-zÀ-ÿ\\s\\-]+$"
+
+      - name: last_name
+        description: "Customer last name"
+        tests:
+          - not_null
+          - dbt_utils.not_empty_string
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[A-Za-zÀ-ÿ\\s\\-]+$"
+
+      - name: marital_status
+        description: "Standardized gender (from CRM or ERP)."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Single", "Married", "n/a"]
+
+      - name: create_date
+        description: "Date the customer record was created in CRM."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: "'2025-01-01'"
+
+      - name: birthday
+        description: "Customer’s date of birth."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: date
+
+      
+
