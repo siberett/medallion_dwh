@@ -1,5 +1,6 @@
 WITH customer AS(
 	SELECT
+		ROW_NUMBER() OVER (ORDER BY cst_id) AS customer_key,	
 		ci.cst_id AS customer_id,
 		ci.cst_key AS customer_number,
 		ci.cst_firstname AS first_name,
@@ -26,6 +27,7 @@ WITH customer AS(
 	ON
 		ci.cst_key = la.cid)
 SELECT
+		customer_key,
 		customer_id,
 		customer_number,
 		first_name,

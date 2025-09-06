@@ -1,7 +1,7 @@
 WITH cust_info AS (
 	SELECT
 		*,
-		ROW_NUMBER() OVER (PARTITION BY cst_create_date ORDER BY cst_create_date DESC)
+		ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC)
 	FROM
 		{{ source('bronze_crm', 'crm_cust_info') }}
 )
